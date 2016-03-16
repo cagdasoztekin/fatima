@@ -26,24 +26,25 @@ api = tweepy.API(auth)
 # BELOVED FUNCTIONS
 # @find_followers returns the list of users that follow the user with the given username
 # both parameters set to none by default to enable the usage of the function with either of them
-def find_followers(screen_name = None, twitter_id = None):
+# flow_window will be a varying duration in case fatima gets timeouts (CS421 SPOOF)
+def find_followers(screen_name = None, twitter_id = None, flow_window=10):
 	followers = []
 
 	for page in tweepy.Cursor(api.followers_ids, screen_name=screen_name).pages():
 		followers.extend(page)
-    	time.sleep(10)
+    	time.sleep(flow_window)
     
 	return followers
 
 # @find_follows returns the list of users that are followed by the user with the given username
-def find_follows(screen_name = None, twitter_id = None):
+def find_follows(screen_name = None, twitter_id = None, flow_window=10):
 	follows = []
 	for page in tweepy.Cursor(api.friends_ids, screen_name=screen_name).pages():
 		follows.extend(page)
-		time.sleep(10)
+		time.sleep(flow_window)
 	return follows
 
-def is_active(screen_name = None, twitter_id = None):
+def is_active(screen_name = None, twitter_id = None, flow_window=10):
     tweet = api.user_timeline(id = twitter_id, count = 1)[0]
     
     # users are assumed to be active if they have tweeted in 2016
@@ -59,6 +60,8 @@ f = open("fatima.txt", "a")
 f.write("\n##### RUN AT ##### " + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + " #####\n")
 f.close()
 
+congestion_window = 50
+flow_window = 10
 
 while(i < len(potential_users)):
 	
@@ -83,11 +86,11 @@ while(i < len(potential_users)):
 		cgds_coefficient = num_mutual/num_follows
 
 		# print the current user's ratio and follow her if ratio is greater than 0.66 and has been active in 2016
-		print "User with name " + current + " has ratio: " + str(cgds_coefficient)
-		f.write("User with name " + current + " has ratio: " + str(cgds_coefficient) + "\n")
+		print "User with name " + current + " has ratio: " + str(cgds_coefficient) + " Time: " + strftime("%Y-%m-%d %H:%M:%S", gmtime())
+		f.write("User with name " + current + " has ratio: " + str(cgds_coefficient) + " Time: " + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + "\n")
 		if(cgds_coefficient > 0.66 and is_active(twitter_id=currentID)):
-			print "Followed user " + current + " with id " + str(currentID)
-			f.write("Followed user " + current + " with id " + str(currentID) + "\n")
+			print "Followed user " + current + " with id " + str(currentID) + " Time: " + strftime("%Y-%m-%d %H:%M:%S", gmtime())
+			f.write("Followed user " + current + " with id " + str(currentID) + " Time: " + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + "\n")
 			api.create_friendship(currentID)
 
 		# add the mutual followers to the potential users list
@@ -98,15 +101,20 @@ while(i < len(potential_users)):
 			if k not in potential_users and len(potential_users) < 1000 and r == 4:
 				potential_users.append(k)
 
-		f.write("Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i) + "\n")
-		print "Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i)
+		f.write("Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i) + " Time: " + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + "\n")
+		print "Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i) + " Time: " + strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
 		i += 1
+		# set the increased durations to sleep to their default values
+		congestion_window = 50
+		flow_window = 10
 
 		
 	except Exception, e:
 		print "Exception raised, sleeping."
 		f.write("Exception raised. Sleeping.\n")
-		time.sleep(60)
+		time.sleep(congestion_window)
+		congestion_window += 1
+		flow_window += 1
 
 	f.close()
