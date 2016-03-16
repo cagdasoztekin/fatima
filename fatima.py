@@ -1,5 +1,6 @@
 from __future__ import division
 import time
+from time import strftime, gmtime
 import csv
 import tweepy
 
@@ -40,10 +41,20 @@ def find_follows(screen_name = None, twitter_id = None):
 		time.sleep(10)
 	return follows
 
+def is_active(screen_name = None, twitter_id = None):
+    tweet = api.user_timeline(id = twitter_id, count = 1)[0]
+    
+    # users are assumed to be active if they have tweeted in 2016
+    return str(tweet.created_at)[:4] == '2016'
+
 # id for calkan_cs
 potential_users = [1234176577]
 
 i = 0
+
+f = openfile("fatima.txt", "a")
+f.write("\n##### RUN AT ##### " + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + " #####\n")
+
 
 while(i < len(potential_users)):
 
@@ -63,17 +74,21 @@ while(i < len(potential_users)):
 
 	cgds_coefficient = num_mutual/num_follows
 
-	# print the current user's ratio and follow her if ratio is greater than 0.66
+	# print the current user's ratio and follow her if ratio is greater than 0.66 and has been active in 2016
 	print "User with name " + current + " has ratio: " + str(cgds_coefficient)
-	if(cgds_coefficient > 0.66):
+	f.write("User with name " + current + " has ratio: " + str(cgds_coefficient))
+	if(cgds_coefficient > 0.66 and is_active(twitter_id=currentID)):
 		print "Followed user " + current + " with id " + str(currentID)
+		f.write("Followed user " + current + " with id " + str(currentID))
 		api.create_friendship(currentID)
 
 	# add the mutual followers to the potential users list
+	# stop adding people to the list if list already contains enought people
 	for k in mutual_ids:
-		if k not in potential_users:
+		if k not in potential_users and len(potential_users) < 1000:
 			potential_users.append(k)
 
+	f.write("Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i))
 	print "Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i)
 
 	i += 1
