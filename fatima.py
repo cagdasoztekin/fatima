@@ -3,6 +3,8 @@ import time
 from time import strftime, gmtime
 import csv
 import tweepy
+import random
+from random import randint
 
 from tweepy import OAuthHandler
 
@@ -52,11 +54,16 @@ potential_users = [1234176577]
 
 i = 0
 
+# close file only to reopen with each iteration to constantly update the file
 f = openfile("fatima.txt", "a")
 f.write("\n##### RUN AT ##### " + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + " #####\n")
+f.close()
 
 
 while(i < len(potential_users)):
+
+	# open and close the file with each iteration to see the updates of the file
+	f = openfile("fatima.txt", "a")
 
 	currentID = potential_users[i]
 	current = api.get_user(currentID).screen_name
@@ -76,19 +83,23 @@ while(i < len(potential_users)):
 
 	# print the current user's ratio and follow her if ratio is greater than 0.66 and has been active in 2016
 	print "User with name " + current + " has ratio: " + str(cgds_coefficient)
-	f.write("User with name " + current + " has ratio: " + str(cgds_coefficient))
+	f.write("User with name " + current + " has ratio: " + str(cgds_coefficient) + "\n")
 	if(cgds_coefficient > 0.66 and is_active(twitter_id=currentID)):
 		print "Followed user " + current + " with id " + str(currentID)
-		f.write("Followed user " + current + " with id " + str(currentID))
+		f.write("Followed user " + current + " with id " + str(currentID) + "\n")
 		api.create_friendship(currentID)
 
 	# add the mutual followers to the potential users list
-	# stop adding people to the list if list already contains enought people
+	# stop adding people to the list if list already contains enough people
 	for k in mutual_ids:
-		if k not in potential_users and len(potential_users) < 1000:
+		r = randint(0,9)
+		# add some non-determinism, 1/10 chance to add a user to potential users list or not
+		if k not in potential_users and len(potential_users) < 1000 and r == 4:
 			potential_users.append(k)
 
-	f.write("Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i))
+	f.write("Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i) + "\n")
 	print "Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i)
 
 	i += 1
+
+	f.close()
