@@ -1,76 +1,79 @@
+from __future__ import division
 import time
 import csv
 import tweepy
-from tweepy import OAuthHandler
- 
-# credentials for fatima
-consumer_key = 'wD7jjVIpW0SpYEPxuPehukOaf'
-consumer_secret = 'Y4skkJua0b4CbePUWxo4H2WnslBvCZpH1Ahja7eVVnfiuxVAtw'
-access_key = '4288397860-tZLJKo5N6DQsXBA8gWwNWWRPWqCfnPUgtQwtcYr'
-access_secret = 'UzMPsIpuXYbJx62raTsNTrorVgyEopQ0gGnSocplSmYaR'
 
-# authorize the application
+from tweepy import OAuthHandler
+
+# connect to the database parameters are: [hostname], [username], [password], [databasename]
+# planned to run on the server with address 178.62.59.61 (http://cgds.me)
+# db = MySQLdb.connect("localhost","fatima","fatimarulez9","fatima" )
+ 
+# twitter api credentials for fatima
+consumer_key = 'pMdGMeuNDVQhmW65NCCp6X5Pz'
+consumer_secret = 'fSUajJoqZj31eq5p7tyOuwkerdypRXqJ9ewzHLqrWfM68ElxOQ'
+access_key = '705756931923845120-vrYJPDiDUyd6QtIkSls8XB12bZsaxra'
+access_secret = 'yAssSsjVE1id9LbJNry0GBVkmGY5oXWfTtUGf6aW52rzf'
+
+# authorize the application to use twitter apai
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_key, access_secret)
 api = tweepy.API(auth)
 
+# BELOVED FUNCTIONS
+# @find_followers returns the list of users that follow the user with the given username
 # both parameters set to none by default to enable the usage of the function with either of them
 def find_followers(screen_name = None, twitter_id = None):
+	followers = []
 
-	# if only screen name is provided, find the user id here
-	if (twitter_id == None):
-		u = api.get_user(screen_name)
-		twitter_id = u.id
+	for page in tweepy.Cursor(api.followers_ids, screen_name=screen_name).pages():
+		followers.extend(page)
+    	time.sleep(10)
+    
+	return followers
 
-	# id's of the followers are added to ids
-	ids = []
-	for page in tweepy.Cursor(api.followers_ids, id=twitter_id).pages():
-	    ids.extend(page)
-	
-	return ids
-
+# @find_follows returns the list of users that are followed by the user with the given username
 def find_follows(screen_name = None, twitter_id = None):
+	follows = []
+	for page in tweepy.Cursor(api.friends_ids, screen_name=screen_name).pages():
+		follows.extend(page)
+		time.sleep(10)
+	return follows
 
-	# if only screen name is provided, find the user id here
-	if (twitter_id == None):
-		u = api.get_user(screen_name)
-		twitter_id = u.id
+# id for calkan_cs
+potential_users = [1234176577]
 
-	users = []
-	page_count = 0
+i = 0
 
-	for user in tweepy.Cursor(api.friends, id=twitter_id).pages():
-		page_count += 1
-	# print 'Getting page {} for friends'.format(page_count)
-		users.extend(user)
-		# time.sleep(10)
-	return users
+while(i < len(potential_users)):
 
-# Show the rate Limits
-# print api.rate_limit_status()
+	currentID = potential_users[i]
+	current = api.get_user(currentID).screen_name
 
-follows = find_follows("cagd_ass")
+	followers = find_followers(screen_name=current)
+	follows = find_follows(screen_name=current)
 
-# for i in follows:
-	# print i
+	# number of followers and followed by
+	num_followers = len(followers)
+	num_follows = len(follows)
 
+	#find the people that follow AND are followed by the given user
+	mutual_ids = list(set(follows).intersection(followers))
+	num_mutual = len(mutual_ids)
 
-followers = find_followers("cagd_ass")
+	cgds_coefficient = num_mutual/num_follows
 
-# for i in followers:
-	# print i
+	# print the current user's ratio and follow her if ratio is greater than 0.66
+	print "User with name " + current + " has ratio: " + str(cgds_coefficient)
+	if(cgds_coefficient > 0.66):
+		print "Followed user " + current + " with id " + str(currentID)
+		api.create_friendship(currentID)
 
-mutual_ids = list(set(follows).intersection(followers))
+	# add the mutual followers to the potential users list
+	for k in mutual_ids:
+		if k not in potential_users:
+			potential_users.append(k)
 
-mutual_count = len(mutual_ids)
+	print "Potential users length: " + str(len(potential_users)) + " currently iterating index: " + str(i)
 
-print mutual_count
-
-print "Printing mutual users:"
-
-users = api.lookup_users(user_ids=mutual_ids)
-for i in ids:
-    print ids.screen_name
-
-
-
+	i += 1
