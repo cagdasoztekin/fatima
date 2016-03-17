@@ -51,7 +51,7 @@ def is_active(screen_name = None, twitter_id = None, flow_window=10):
     return str(tweet.created_at)[:4] == '2016'
 
 # id for calkan_cs
-potential_users = [1234176577]
+
 
 i = 0
 
@@ -63,10 +63,34 @@ f.close()
 congestion_window = 50
 flow_window = 10
 
+fu = open("users.txt", "r")
+i = fu.readline()
+if(i == ''):
+	i = 0
+else:
+	print "Use existing users text file"
+	i = int(i)
+potential_users = []
+for p in fu:
+	potential_users.append(int(p))
+fu.close()
+
+if(len(potential_users) == 0):
+	potential_users = [1234176577]
+
+
 while(i < len(potential_users)):
 	
 	# open and close the file with each iteration to see the updates of the file
+	# append mode
 	f = open("fatima.txt", "a")
+
+	# rewrite the current users to a file in case the program shuts
+	fu = open("users.txt", "w")
+	fu.write(str(i) + "\n")
+	for p in potential_users:
+		fu.write(str(p) + "\n")
+	fu.close()
 
 	try:
 		currentID = potential_users[i]
