@@ -7,7 +7,7 @@ k = Kernel.Kernel()
 
 # Use the 'learn' method to load the contents
 # of an AIML file into the Kernel.
-files = glob.glob("/home/baraa/Downloads/pyAIML/aiml-en-us-foundation-alice/*")
+files = glob.glob("aiml-en-us-foundation-alice/*")
 for f in files:
 	k.learn(f)
 
@@ -19,4 +19,12 @@ for f in files:
 
 # Loop forever, reading user input from the command
 # line and printing responses.
-while True: print k.respond(raw_input("> "))
+a = True
+if a:
+	with open("formatted.formatted.tweets") as f:
+		read_data = f.readlines()
+		for l in read_data:
+			#print l
+			print k.respond(l)
+else:
+	while True: print k.respond(raw_input("> "))
