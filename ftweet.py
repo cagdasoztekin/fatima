@@ -22,7 +22,6 @@ ttt =api.trends_place(3369)#ottawas location code
 t = ttt[0]
 tname = ''
 for i in t[u'trends']:
-	
 	if 'fashion' in i[u'name'].lower():#if contains a spesific word join that trend
 		tname = i[u'name']
 
